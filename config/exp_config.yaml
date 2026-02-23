@@ -1,0 +1,59 @@
+# ==========================================
+# Text-to-SQL Pipeline Configuration
+# ==========================================
+
+# 1. 파일 및 데이터 경로 (Paths)
+paths:
+  train_data_dir: "/SSL_NAS/peoples/khj/thesis/train"
+  train_json: "/SSL_NAS/peoples/khj/thesis/train/train.json"
+  train_db_dir: "/SSL_NAS/peoples/khj/thesis/train/train_databases"
+  
+  processed_data_dir: "./data/processed"
+  log_dir: "./logs"
+
+# 2. 대형 언어 모델 (LLM & vLLM Settings)
+# Verbalizer와 Agent가 공통으로 사용하는 추론 엔진 설정
+llm:
+  model_name: "meta-llama/Meta-Llama-3.1-8B-Instruct"
+  api_base: "http://localhost:8000/v1"
+  api_key: "vllm"
+  temperature: 0.1
+  max_tokens: 256
+
+# 3. 임베딩 모델 및 차원 (Embeddings & Model Dimensions)
+models:
+  plm_model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  spacy_model: "en_core_web_sm"
+  dimensions:
+    plm_out: 384       # Sentence Transformer 출력 차원
+    gat_hidden: 128    # GAT 중간 은닉 차원
+    gat_out: 256       # GAT 최종 출력 차원
+    joint_space: 256   # Alignment Layer가 맞출 공통 차원
+  gat_params:
+    num_layers: 2      # Message Passing 횟수 (Hop)
+    heads: 4           # Multi-head Attention 개수
+
+# 4. 초기 노드 검색 (Retriever)
+retrieval:
+  top_k_per_token: 3   # 각 질문 토큰 당 뽑아낼 후보 노드 수
+  threshold: 0.1       # [실험 중요 튜닝 값] 이 임계값을 넘지 못하면 Seed에서 배제
+
+# 5. 서브그래프 라우팅 (PCST Algorithm)
+pcst:
+  base_cost: 1.0           # PK-FK 엣지를 건널 때의 기본 비용
+  alpha: 0.5               # [실험 중요 튜닝 값] 질문과 엣지가 유사할 때 깎아줄 할인율 (0.0 ~ 1.0)
+  belongs_to_cost: 0.01    # Table-Column 간의 종속 관계 비용 (매우 낮게 고정)
+
+# 6. 에이전트 워크플로우 (Agentic Workflow)
+agent:
+  uncertainty_threshold: 0.6
+
+# 7. Training Hyperparameter
+training:
+  project_name: "Text-to-SQL-Alignment"
+  num_epochs: 50
+  batch_size: 16
+  learning_rate: 1e-4
+  weight_decay: 1e-5
+  log_interval: 10
+  save_dir: "./models/saved"

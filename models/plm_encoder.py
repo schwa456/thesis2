@@ -20,6 +20,10 @@ class PLMEncoder(nn.Module):
         출력: (Batch, Seq_Len, Hidden_Dim) 크기의 Token 임베딩 텐서와 파싱된 토큰 리스트
         """
         inputs = self.tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
+
+        device = next(self.model.parameters()).device
+
+        inputs = {k: v.to(device) for k, v in inputs.items()}
         
         with torch.no_grad():
             outputs = self.model(**inputs)

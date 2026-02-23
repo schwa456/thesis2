@@ -1,6 +1,7 @@
 import sqlite3
 import os
 from typing import Dict, List, Any
+from utils.logger import data_logger
 
 class SQLiteSchemaParser:
     """
@@ -67,7 +68,7 @@ class SQLiteSchemaParser:
                     })
         
         except Exception as e:
-            print(f"Error parsing schema for {self.db_path}: {e}")
+            data_logger.error(f"Error parsing schema for {self.db_path}: {e}")
         
         finally:
             cursor.close()

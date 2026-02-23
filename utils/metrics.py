@@ -56,19 +56,3 @@ class EvaluatorMetrics:
             "Rejection_Accuracy": round(rejection_accuracy, 4),
             "Over_Rejection_Rate": round(over_rejection_rate, 4)
         }
-
-# --- 단위 테스트 ---
-if __name__ == "__main__":
-    evaluator = EvaluatorMetrics()
-    
-    # 1. Schema Linking 평가 테스트
-    pred_nodes = ["employee.id", "employee.salary", "department.name"]
-    gt_nodes = ["employee.id", "employee.salary", "department.name", "department.id"]
-    print("Schema Linking Score:", evaluator.schema_linking_f1(pred_nodes, gt_nodes))
-    
-    # 2. Rejection 평가 테스트
-    # 실제로는 2개가 거절되어야 하는데(Unanswerable), 모델이 1개만 맞추고 1개는 억지로 답한 상황(FN), 
-    # 그리고 정상적인 질문 1개를 거절한 상황(FP)
-    preds = ["Answerable", "Unanswerable", "Unanswerable", "Answerable"]
-    gts   = ["Answerable", "Answerable",   "Unanswerable", "Unanswerable"]
-    print("Rejection Metrics:", evaluator.rejection_metrics(preds, gts))

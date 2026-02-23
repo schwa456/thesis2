@@ -44,6 +44,12 @@ class SchemaHeteroGAT(nn.Module):
             'fk_node': Linear(hidden_channels * heads, out_channels)
         })
 
+        self.skip_dict = nn.ModuleDict({
+            'table': Linear(in_channels, out_channels),
+            'column': Linear(in_channels, out_channels),
+            'fk_node': Linear(in_channels, out_channels)
+        })
+
     def forward(self, x_dict: dict, edge_index_dict: dict) -> dict:
         """
         x_dict: {'table': Tensor, 'column': Tensor, 'fk_node': Tensor}
@@ -64,37 +70,7 @@ class SchemaHeteroGAT(nn.Module):
         # Step 3: Output Projection
         final_dict = {}
         for node_type, x in out_dict.items():
-            final_dict[node_type] = self.out_lin_dict[node_type](x)
+            final_dict[node_type] = self.out_lin_dict[node_type](x) + self.skip_dict[node_type](x_dict[node_type])
 
         # 최종 반환 형태: 각 노드 타입별 업데이트된 임베딩 텐서
         return final_dict
-
-# --- 테스트 코드 (Unit Test) ---
-if __name__ == "__main__":
-    # graph_builder.py에서 만든 것과 동일한 형태의 가짜 데이터 생성
-    # 가정: PLM(all-MiniLM)이 384차원의 벡터를 뱉었다고 가정
-    num_tables, num_cols, num_fks = 2, 5, 1
-    in_dim = 384
-
-    mock_x_dict = {
-        'table': torch.randn((num_tables, in_dim)),
-        'column': torch.randn((num_cols, in_dim)),
-        'fk_node': torch.randn((num_fks, in_dim))
-    }
-
-    mock_edge_index_dict = {
-        ('table', 'has_column', 'column'): torch.tensor([[0, 0, 1, 1, 1], [0, 1, 2, 3, 4]], dtype=torch.long),
-        ('column', 'belongs_to', 'table'): torch.tensor([[0, 1, 2, 3, 4], [0, 0, 1, 1, 1]], dtype=torch.long),
-        ('column', 'is_source_of', 'fk_node'): torch.tensor([[1], [0]], dtype=torch.long),
-        ('fk_node', 'points_to', 'column'): torch.tensor([[0], [2]], dtype=torch.long)
-    }
-
-    # 2. 모델 초기화 (Input 384 -> Hidden 128 -> Output 256)
-    model = SchemaHeteroGAT(in_channels=384, hidden_channels=128, out_channels=256, num_layers=2, heads=4)
-    
-    # 3. 모델 Forward Pass (Inference)
-    output_dict = model(mock_x_dict, mock_edge_index_dict)
-
-    print("\n--- GAT Output Embeddings ---")
-    for node_type, tensor in output_dict.items():
-        print(f"Updated {node_type.capitalize()} Node Shape: {tensor.shape}")

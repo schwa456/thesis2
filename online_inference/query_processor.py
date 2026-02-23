@@ -1,6 +1,7 @@
 import spacy
 import torch
 from typing import List, Tuple
+from utils.logger import exp_logger
 
 class QueryProcessor:
     """
@@ -12,7 +13,7 @@ class QueryProcessor:
         try:
             self.nlp = spacy.load(spacy_model)
         except OSError:
-            print(f"Downloading spacy model {spacy_model}...")
+            exp_logger.warning(f"Downloading spacy model {spacy_model}...")
             from spacy.cli import download
             download(spacy_model)
             self.nlp = spacy.load(spacy_model)
@@ -24,6 +25,7 @@ class QueryProcessor:
         """질문에서 불용어를 제외한 핵심 키워드 리스트를 반환합니다."""
         doc = self.nlp(query)
         keywords = [token.text for token in doc if token.pos_ in self.valid_pos and not token.is_stop]
+        exp_logger.debug(f"[Keywords] {keywords}")
         return keywords
 
     def mask_embeddings(self, 
@@ -58,11 +60,3 @@ class QueryProcessor:
             
         masked_embs = token_embs[valid_indices] # (K, Hidden_Dim) 크기로 축소됨
         return masked_embs, valid_tokens
-
-# --- 단위 테스트 ---
-if __name__ == "__main__":
-    processor = QueryProcessor()
-    q = "What is the average salary of the employees in the IT department?"
-    print(f"Original: {q}")
-    print(f"Keywords: {processor.extract_keywords(q)}")
-    # Expected: ['average', 'salary', 'employees', 'IT', 'department']pip

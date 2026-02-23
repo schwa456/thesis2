@@ -1,3 +1,4 @@
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -29,7 +30,7 @@ class DualTowerAlignment(nn.Module):
         
         # 대조 학습(Contrastive Learning)을 위한 온도(Temperature) 파라미터.
         # 학습을 통해 최적화되도록 Parameter로 설정 (초기값 0.07은 CLIP 논문 기준)
-        self.logit_scale = nn.Parameter(torch.ones([]) * (1 / 0.07).log())
+        self.logit_scale = nn.Parameter(torch.ones([]) * math.log(1 / 0.07))
 
     def forward(self, text_embs: torch.Tensor, graph_embs: torch.Tensor):
         """
@@ -81,37 +82,3 @@ class DualTowerAlignment(nn.Module):
         max_sim_scores, _ = sim_matrix.max(dim=0)
         
         return max_sim_scores
-
-# --- 테스트 코드 (Unit Test) ---
-if __name__ == "__main__":
-    # 1. 하이퍼파라미터 세팅
-    num_query_tokens = 6  # "Show", "me", "the", "salary", "of", "employees" (불용어 제거 전)
-    num_schema_nodes = 10 # 전체 DB의 Table/Column 총합 (테스트용)
-    
-    text_dim = 384   # PLM 출력 차원
-    graph_dim = 256  # GAT 출력 차원
-    joint_dim = 256  # 매핑될 공통 차원
-    
-    # 2. 가상의 텐서 생성
-    mock_text_embs = torch.randn((num_query_tokens, text_dim))
-    mock_graph_embs = torch.randn((num_schema_nodes, graph_dim))
-    
-    # 3. 모듈 초기화
-    alignment_layer = DualTowerAlignment(text_dim=text_dim, graph_dim=graph_dim, joint_dim=joint_dim)
-    
-    # 4. Forward Pass (투영 및 정규화)
-    z_text, z_graph = alignment_layer(mock_text_embs, mock_graph_embs)
-    print(f"Projected Text Shape:  {z_text.shape} (L2 Norm: {torch.norm(z_text[0]).item():.4f})")
-    print(f"Projected Graph Shape: {z_graph.shape} (L2 Norm: {torch.norm(z_graph[0]).item():.4f})")
-    
-    # 5. [Online Inference] MaxSim 점수 계산
-    maxsim_scores = alignment_layer.compute_maxsim_scores(z_text, z_graph)
-    print(f"\nMaxSim Scores for Schema Nodes: \n{maxsim_scores}")
-    print(f"Score Shape: {maxsim_scores.shape} (1점당 1개의 스키마 노드 매칭)")
-    
-    # 6. [Offline Training] Contrastive Loss 계산 테스트 (배치 사이즈 4 가정)
-    mock_anchor_text = torch.randn((4, text_dim))
-    mock_positive_graph = torch.randn((4, graph_dim))
-    z_a, z_p = alignment_layer(mock_anchor_text, mock_positive_graph)
-    loss = alignment_layer.compute_contrastive_loss(z_a, z_p)
-    print(f"\nContrastive Loss (InfoNCE): {loss.item():.4f}")

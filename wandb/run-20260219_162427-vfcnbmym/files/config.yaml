@@ -1,0 +1,133 @@
+_wandb:
+    value:
+        cli_version: 0.25.0
+        e:
+            ursnicptbo4qdnzdles8od9kg7o945v8:
+                codePath: train.py
+                codePathLocal: train.py
+                cpu_count: 18
+                cpu_count_logical: 36
+                cudaVersion: "12.2"
+                disk:
+                    /:
+                        total: "39998480384"
+                        used: "28272582656"
+                email: itkw456@gmail.com
+                executable: /home/hyeonjin/miniconda3/bin/python
+                git:
+                    commit: fd7f4eb2611a2d7174448da9d2decc697dbc8740
+                    remote: https://github.com/schwa456/thesis2.git
+                gpu: NVIDIA GeForce RTX 3090
+                gpu_count: 4
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 10496
+                      memoryTotal: "25769803776"
+                      name: NVIDIA GeForce RTX 3090
+                      uuid: GPU-a594a4b4-adae-3d13-8c88-a3ee3c6fd9b6
+                    - architecture: Ampere
+                      cudaCores: 10496
+                      memoryTotal: "25769803776"
+                      name: NVIDIA GeForce RTX 3090
+                      uuid: GPU-e93aea6c-f4b6-f423-a4d1-2f10a8629386
+                    - architecture: Ampere
+                      cudaCores: 10496
+                      memoryTotal: "25769803776"
+                      name: NVIDIA GeForce RTX 3090
+                      uuid: GPU-e5ac53c5-33b7-bca5-7686-bfdb7f7905b7
+                    - architecture: Ampere
+                      cudaCores: 10496
+                      memoryTotal: "25769803776"
+                      name: NVIDIA GeForce RTX 3090
+                      uuid: GPU-5c497a70-4892-6a66-34c2-072cc87759e8
+                host: smart04-srv
+                memory:
+                    total: "134728077312"
+                os: Linux-6.8.0-90-generic-x86_64-with-glibc2.35
+                program: /home/hyeonjin/thesis2/train.py
+                python: CPython 3.13.5
+                root: /home/hyeonjin/thesis2
+                startedAt: "2026-02-19T07:24:27.688565Z"
+                writerId: ursnicptbo4qdnzdles8od9kg7o945v8
+        m: []
+        python_version: 3.13.5
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 51
+                - 53
+                - 71
+                - 75
+                - 77
+                - 98
+                - 105
+            "2":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 51
+                - 53
+                - 71
+                - 75
+                - 77
+                - 98
+                - 105
+            "3":
+                - 13
+                - 16
+            "4": 3.13.5
+            "5": 0.25.0
+            "6": 4.56.1
+            "12": 0.25.0
+            "13": linux-x86_64
+agent:
+    value:
+        uncertainty_threshold: 0.3
+llm:
+    value:
+        api_base: http://localhost:8000/v1
+        api_key: vllm
+        max_tokens: 256
+        model_name: meta-llama/Meta-Llama-3-8B-Instruct
+        temperature: 0.1
+models:
+    value:
+        dimensions:
+            gat_hidden: 128
+            gat_out: 256
+            joint_space: 256
+            plm_out: 384
+        gat_params:
+            heads: 4
+            num_layers: 2
+        plm_model_name: sentence-transformers/all-MiniLM-L6-v2
+        spacy_model: en_core_web_sm
+paths:
+    value:
+        log_dir: ./logs
+        processed_data_dir: ./data/processed
+        raw_data_dir: ./data/raw
+pcst:
+    value:
+        alpha: 0.5
+        base_cost: 1
+        belongs_to_cost: 0.01
+retrieval:
+    value:
+        threshold: 0.6
+        top_k_per_token: 3
+training:
+    value:
+        batch_size: 16
+        learning_rate: "1e-4"
+        log_interval: 10
+        num_epochs: 50
+        project_name: Text-to-SQL-Alignment
+        save_dir: ./models/saved
+        weight_decay: "1e-5"

@@ -2,6 +2,7 @@ import os
 import json
 from typing import Dict, List, Any
 from openai import OpenAI
+from utils.logger import data_logger
 
 class SchemaVerbalizer:
     """
@@ -53,11 +54,11 @@ class SchemaVerbalizer:
                 temperature=0.1,
                 max_tokens=50
             )
-            description = response.choices[0].mesage.content.strip()
+            description = response.choices[0].message.content.strip()
             return description
         
         except Exception as e:
-            print(f"[ERROR] Error verbalizing FK {fk}: {e}")
+            data_logger.error(f"[ERROR] Error verbalizing FK {fk}: {e}")
             return f"Connects {fk['from_table']} to {fk['to_table']}."
     
     def process_all_fks(self, schema_info: Dict[str, Any]) -> Dict[str, str]:
@@ -68,7 +69,7 @@ class SchemaVerbalizer:
         edge_descriptions = {}
         foreign_keys = schema_info.get("foreign_keys", [])
 
-        print(f"Starting verbalization for {len(foreign_keys)} foreign keys...")
+        data_logger.debug(f"Starting verbalization for {len(foreign_keys)} foreign keys...")
         
         for fk in foreign_keys:
             # Edge 고유 ID 생성 (예: employee.dept_id->department.dept_id)
@@ -76,6 +77,6 @@ class SchemaVerbalizer:
             
             description = self.verbalize_foreign_key(fk)
             edge_descriptions[edge_id] = description
-            print(f"[*] {edge_id} : {description}")
+            data_logger.debug(f"[*] {edge_id} : {description}")
 
         return edge_descriptions

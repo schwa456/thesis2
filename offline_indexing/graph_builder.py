@@ -2,6 +2,7 @@ import torch
 from torch_geometric.data import HeteroData
 from sentence_transformers import SentenceTransformer
 from typing import Dict, Any
+from utils.logger import data_logger
 
 class SchemaGraphBuilder:
     """
@@ -10,7 +11,7 @@ class SchemaGraphBuilder:
     (핵심 기여: FK 관계를 독립적인 'fk_node'로 승격시키는 Line Graph Transformation 적용)
     """
     def __init__(self, plm_model_name: str = 'all-MiniLM-L6-v2'):
-        print(f"Loading PLM for initial node features: {plm_model_name}...")
+        data_logger.debug(f"Loading PLM for initial node features: {plm_model_name}...")
         # GAT에 들어가기 전, 텍스트를 초기 Dense Vector로 변환해 줄 PLM
         self.encoder = SentenceTransformer(plm_model_name)
 
@@ -54,7 +55,7 @@ class SchemaGraphBuilder:
         # ---------------------------------------------------------
         # Step 2: PLM을 이용한 Node Feature Tensor 생성 (초기 임베딩)
         # ---------------------------------------------------------
-        print("Encoding node features...")
+        data_logger.debug("Encoding node features...")
         # (N, D) 형태의 Float Tensor로 변환됨
         data['table'].x = self.encoder.encode(table_texts, convert_to_tensor=True)
         data['column'].x = self.encoder.encode(col_texts, convert_to_tensor=True)
@@ -81,8 +82,15 @@ class SchemaGraphBuilder:
 
         # B. Column <-> FK Node <-> Column (관계의 승격)
         for fk in schema_info.get("foreign_keys", []):
-            edge_id = f"{fk['from_table']}.{fk['from_column']}->{fk['to_table']}.{fk['to_column']}"
+            from_col_name = f"{fk.get('from_table')}.{fk.get('from_column')}"
+            to_col_name = f"{fk.get('to_table')}.{fk.get('to_column')}"
+            edge_id = f"{from_col_name}->{to_col_name}"
+
             if edge_id not in fk_to_id:
+                continue
+
+            if from_col_name not in col_to_id or to_col_name not in col_to_id:
+                data_logger.warning(f"Skipping broken FK: {from_col_name} -> {to_col_name}")
                 continue
             
             f_id = fk_to_id[edge_id]
@@ -113,36 +121,3 @@ class SchemaGraphBuilder:
         }
 
         return data
-
-# --- 테스트 코드 (Unit Test) ---
-if __name__ == "__main__":
-    # 이전 모듈들에서 파싱 및 생성되었다고 가정한 더미 데이터
-    mock_schema = {
-        "tables": ["department", "employee"],
-        "columns": {
-            "department": [{"name": "dept_id", "type": "integer"}, {"name": "dept_name", "type": "text"}],
-            "employee": [{"name": "emp_id", "type": "integer"}, {"name": "dept_id", "type": "integer"}]
-        },
-        "foreign_keys": [
-            {"from_table": "employee", "from_column": "dept_id", "to_table": "department", "to_column": "dept_id"}
-        ]
-    }
-    
-    mock_fk_desc = {
-        "employee.dept_id->department.dept_id": "Links an employee to the department they work in, allowing queries about staff locations."
-    }
-
-    builder = SchemaGraphBuilder()
-    graph_data = builder.build_graph(mock_schema, mock_fk_desc)
-
-    print("\n--- Generated PyG HeteroData Object ---")
-    print(graph_data)
-    
-    print("\n[Node Feature Shapes]")
-    print(f"Table Features: {graph_data['table'].x.shape}")
-    print(f"Column Features: {graph_data['column'].x.shape}")
-    print(f"FK Node Features: {graph_data['fk_node'].x.shape}")
-    
-    print("\n[Edge Index Shapes]")
-    print(f"Table -> Column: {graph_data['table', 'has_column', 'column'].edge_index.shape}")
-    print(f"Column -> FK Node: {graph_data['column', 'is_source_of', 'fk_node'].edge_index.shape}")
